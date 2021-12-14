@@ -54,4 +54,4 @@ def agglo(tweets,K):
         vectors[i] = vectorize(processed_tweets[i], alphabet)
         clusters[i] = [i]
     mergeToK(clusters, vectors, K)
-    return clusters
+    return (clusters, vectors, processed_tweets)

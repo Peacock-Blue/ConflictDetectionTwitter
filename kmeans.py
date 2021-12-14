@@ -9,6 +9,9 @@ def assignToCluster(clusters, vectors, centroids):
 
 
 def kmeans(k, max_iter, vectors):
+    if len(vectors) == 0:
+        print("Empty kmeans call")
+        return dict()
     clusters = {}
     centroids = {}
     idx = np.random.choice(len(vectors), k, replace=False)
@@ -48,4 +51,4 @@ def kmeans_cl(tweets, k, max_iter):
         vectors[i] = vectorize(processed_tweets[i], alphabet)
     clusters[0] = [i for i in range(len(processed_tweets))]
     clusters = kmeans(k, max_iter, vectors)
-    return clusters
+    return (clusters, vectors, processed_tweets)
