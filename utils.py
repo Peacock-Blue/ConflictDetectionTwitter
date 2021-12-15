@@ -11,6 +11,8 @@ from nltk.stem import PorterStemmer
 from nltk.tokenize import TweetTokenizer
 from nltk import download
 from collections import Counter
+from myconfig import *
+from textblob import TextBlob
 
 # download('stopwords')
 
@@ -113,21 +115,46 @@ def display_unique_tweets(tweets, cluster):
             print(c_tweets[i])
 
 
+#Twitter class for fetching tweets
+
 class TwitterClient(object):
     def __init__(self):
         try:
-            self.auth = OAuthHandler(os.getenv('api_key'), os.getenv('api_secret'))
-            self.auth.set_access_token(os.getenv('oauth_token'), os.getenv('oauth_token_secret'))
+            self.auth = tweepy.OAuthHandler(twitterApiKey,twitterApiKeySecret)
+            self.auth.set_access_token(twitterAccessToken,twitterAccessTokenSecret)
             self.api = tweepy.API(self.auth)
             assert self.api
         except:
             print("Error: Authentication Failed")
-
+    
+    def clean_tweet(self, tweet):
+        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
+    
+    def get_tweet_sentiment(self, tweet):
+        # create TextBlob object of passed tweet text
+        analysis = TextBlob(self.clean_tweet(tweet))
+        # set sentiment
+        if analysis.sentiment.polarity > 0:
+            return 'positive'
+        elif analysis.sentiment.polarity == 0:
+            return 'neutral'
+        else:
+            return 'negative'
+    
     def get_tweets(self, query, count = 10):
         tweets = []
         try:
             fetched_tweets = self.api.search_tweets(q = query, count = count)
             for tweet in fetched_tweets:
+                '''
+                all_english = True
+                for c in tweet.text:
+                    if ord(c) >= 256:
+                        all_english = False
+                        break
+                if not all_english:
+                    continue
+                '''
                 parsed_tweet = {}
                 parsed_tweet['text'] = tweet.text
                 parsed_tweet['sentiment'] = self.get_tweet_sentiment(tweet.text)
@@ -144,22 +171,5 @@ class TwitterClient(object):
         try:
             return self.api.search_tweets(q = query, count = count)
         except tweepy.TweepyException as e:
-            print("Error : " + str(e))  
-
-    def clean_tweet(self, tweet):
-        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
-    
-
-    def get_tweet_sentiment(self, tweet):
-        # create TextBlob object of passed tweet text
-        analysis = TextBlob(self.clean_tweet(tweet))
-        # set sentiment
-        if analysis.sentiment.polarity > 0:
-            return 'positive'
-        elif analysis.sentiment.polarity == 0:
-            return 'neutral'
-        else:
-            return 'negative'
-
-
-
+            print("Error : " + str(e))
+            
