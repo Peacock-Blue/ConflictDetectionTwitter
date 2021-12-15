@@ -1,4 +1,3 @@
-import re
 import tweepy
 import numpy as np
 from tweepy import OAuthHandler
@@ -69,6 +68,13 @@ def count_words(tweet:list, freqs:dict, wordToTweet:dict):
             wordToTweet[word] = [tweet]
     return freqs
 
+def normalize(v):
+    norm = np.power(np.sum(np.power(v,2)), 0.5)
+    if norm == 0:
+        return 0
+    return v / norm
+
+
 
 def vectorize(tweet, alphabet):
     v = np.zeros(len(alphabet))
@@ -76,6 +82,7 @@ def vectorize(tweet, alphabet):
         if alphabet[i] in tweet:
             v[i] += 1
     return v
+
 def closestCluster(vector, centroids):
     closest = -1
     minDist = 2**30
@@ -85,28 +92,12 @@ def closestCluster(vector, centroids):
             minDist = dist
             closest = key
     return closest
+
+
 def assignToCluster(clusters, vectors, centroids):
     for i in range(len(vectors)):
         c = closestCluster(vectors[i], centroids)
         clusters[c].append(i)
-    return clusters
-def kmeans(k, max_iter, vectors):
-    clusters = {}
-    centroids = {}
-    idx = np.random.choice(len(vectors), k, replace=False)
-    for i in range(k):
-        clusters[i] = []
-        centroids[i] = vectors[idx[i]] 
-    clusters = assignToCluster(clusters, vectors, centroids)
-    for _ in range(max_iter-1):
-        for i in range(k):
-            for j in clusters[i]:
-                centroids[i] = centroids[i] + vectors[j]
-            if clusters[i] != []:
-                centroids[i] = centroids[i] / len(clusters[i])
-            if len(clusters[i]):
-                clusters[i].clear()
-        clusters = assignToCluster(clusters, vectors, centroids)
     return clusters
 
 
@@ -131,8 +122,7 @@ class TwitterClient(object):
             assert self.api
         except:
             print("Error: Authentication Failed")
-    
-    
+
     def get_tweets(self, query, count = 10):
         tweets = []
         try:
@@ -155,5 +145,21 @@ class TwitterClient(object):
             return self.api.search_tweets(q = query, count = count)
         except tweepy.TweepyException as e:
             print("Error : " + str(e))  
+
+    def clean_tweet(self, tweet):
+        return ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
+    
+
+    def get_tweet_sentiment(self, tweet):
+        # create TextBlob object of passed tweet text
+        analysis = TextBlob(self.clean_tweet(tweet))
+        # set sentiment
+        if analysis.sentiment.polarity > 0:
+            return 'positive'
+        elif analysis.sentiment.polarity == 0:
+            return 'neutral'
+        else:
+            return 'negative'
+
 
 

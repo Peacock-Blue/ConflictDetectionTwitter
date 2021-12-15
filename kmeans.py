@@ -48,4 +48,4 @@ def kmeans_cl(tweets, k, max_iter):
         vectors[i] = vectorize(processed_tweets[i], alphabet)
     clusters[0] = [i for i in range(len(processed_tweets))]
     clusters = kmeans(k, max_iter, vectors)
-    return clusters
+    return (clusters,vectors)
