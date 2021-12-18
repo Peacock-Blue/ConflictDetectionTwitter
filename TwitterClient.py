@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 class TwitterClient(object):
     def __init__(self):
-        load_dotenv()
+        load_dotenv('auth.txt')
         try:
             self.auth = tweepy.OAuthHandler(os.getenv('api_key'), os.getenv('api_secret'))
             self.auth.set_access_token(os.getenv('oauth_token'), os.getenv('oauth_token_secret'))
